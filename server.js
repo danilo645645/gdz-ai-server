@@ -1,15 +1,15 @@
 import express from "express";
-import cors from "cors";
 import fetch from "node-fetch";
+import cors from "cors";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.post("/chat", async (req, res) => {
-  const message = req.body.message;
-
+app.post("/ask", async (req, res) => {
   try {
+    const userText = req.body.text;
+
     const r = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -19,17 +19,21 @@ app.post("/chat", async (req, res) => {
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: "Ты школьный помощник для 6 класса. Объясняй просто и понятно." },
-          { role: "user", content: message }
+          { role: "system", content: "Ты школьный помощник, объясняй понятно." },
+          { role: "user", content: userText }
         ]
       })
     });
 
     const data = await r.json();
-    res.json({ reply: data.choices[0].message.content });
-  } catch {
-    res.status(500).json({ error: "Ошибка сервера" });
+
+    res.json({
+      answer: data.choices[0].message.content
+    });
+
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
-app.listen(3000, () => console.log("Server running"));
+app.listen(3000, () => console.log("Server started"));
